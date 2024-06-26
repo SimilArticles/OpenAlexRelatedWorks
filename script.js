@@ -1,42 +1,59 @@
-async function queryOpenAlex() {
-    const doi = document.getElementById('doiInput').value;
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = 'Loading...';
+const searchButton = document.getElementById('searchButton');
+const resultsContainer = document.getElementById('results');
 
-    try {
-        // Query OpenAlex API for the input DOI
-        const response = await fetch(`https://api.openalex.org/works?filter=doi:${doi}`);
-        const data = await response.json();
+searchButton.addEventListener('click', async () => {
+  const doi = document.getElementById('doiInput').value;
 
-        if (data.results && data.results.length > 0) {
-            const work = data.results[0];
-            const relatedWorks = work.related_works || [];
+  try {
+    // 1. Fetch Related Works from OpenAlex
+    const relatedWorks = await getRelatedWorks(doi);
 
-            // Query OpenAlex API for each related work
-            const relatedWorksPromises = relatedWorks.map(relatedId =>
-                fetch(`https://api.openalex.org/works/${relatedId}`)
-                    .then(response => response.json())
-            );
+    // 2. Get Concepts for Related Works from OpenAlex AI
+    const relatedWorksWithConcepts = await Promise.all(
+      relatedWorks.map(async (work) => {
+        const concepts = await getConceptsForWork(work.id);
+        return { ...work, concepts };
+      })
+    );
 
-            const relatedWorksData = await Promise.all(relatedWorksPromises);
+    // 3. Display Results
+    displayResults(relatedWorksWithConcepts);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    resultsContainer.innerHTML = "<p>An error occurred. Please try again later.</p>";
+  }
+});
 
-            // Display results
-            resultsDiv.innerHTML = '<h2>Related Works:</h2>';
-            relatedWorksData.forEach(relatedWork => {
-                const title = relatedWork.title || 'No title available';
-                const doi = relatedWork.doi || '#';
-                resultsDiv.innerHTML += `
-                    <p>
-                        <strong>Title:</strong> ${title}<br>
-                        <strong>DOI:</strong> <a href="https://doi.org/${doi}" target="_blank">${doi}</a>
-                    </p>
-                `;
-            });
-        } else {
-            resultsDiv.innerHTML = 'No results found for the given DOI.';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultsDiv.innerHTML = 'An error occurred while fetching data.';
-    }
+async function getRelatedWorks(doi) {
+  const response = await fetch(`https://api.openalex.org/works/doi:${doi}/related`);
+  const data = await response.json();
+  return data.results; 
+}
+
+async function getConceptsForWork(workId) {
+  const response = await fetch(`https://api.openalex.org/works/${workId}/concepts`);
+  const data = await response.json();
+  return data.results.map((concept) => concept.display_name);
+}
+
+function displayResults(relatedWorks) {
+  resultsContainer.innerHTML = ''; // Clear previous results
+
+  if (relatedWorks.length === 0) {
+    resultsContainer.innerHTML = "<p>No related works found.</p>";
+    return;
+  }
+
+  const resultList = document.createElement('ul');
+  relatedWorks.forEach((work) => {
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `
+      <a href="${work.doi}" target="_blank">${work.title}</a> 
+      <br>
+      Concepts: ${work.concepts.join(', ')}
+    `;
+    resultList.appendChild(listItem);
+  });
+
+  resultsContainer.appendChild(resultList);
 }
