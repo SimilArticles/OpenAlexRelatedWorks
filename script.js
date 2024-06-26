@@ -6,6 +6,7 @@ async function findRelatedWorks() {
     try {
         // Step 2: Query OpenAlex API with DOI
         const response = await fetch(`https://api.openalex.org/works?filter=doi:${doi}`);
+        resultsDiv.innerHTML = <h3>https://api.openalex.org/works?filter=doi:${doi}</h3>
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
