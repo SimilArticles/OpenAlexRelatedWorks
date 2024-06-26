@@ -1,18 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenAlex DOI Query</title>
-    <link rel="stylesheet" href="styles.css">
+  <title>Related Works Finder</title>
 </head>
 <body>
-    <div class="container">
-        <h1>OpenAlex DOI Query</h1>
-        <input type="text" id="doiInput" placeholder="Enter DOI">
-        <button onclick="queryOpenAlex()">Search</button>
-        <div id="results"></div>
+  <h1>Find Related Works</h1>
+  <label for="doiInput">Enter DOI:</label>
+  <input type="text" id="doiInput">
+  <button id="searchButton">Search</button>
+
+  <div id="results">
     </div>
-    <script src="script.js"></script>
-</body>
+
+  <script src="script.js"></script> </body>
 </html>
