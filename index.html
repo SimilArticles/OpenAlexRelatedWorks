@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenAlex DOI Query App</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        #results { margin-top: 20px; }
-        .related-work { margin-bottom: 10px; }
-    </style>
+    <title>OpenAlex Related Works Finder</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>OpenAlex DOI Query App</h1>
-    <input type="text" id="doiInput" placeholder="Enter DOI">
-    <button onclick="queryOpenAlex()">Search</button>
-    <div id="results"></div>
-
-    <script src="app.js"></script>
+    <div class="container">
+        <h1>OpenAlex Related Works Finder</h1>
+        <input type="text" id="doiInput" placeholder="Enter DOI">
+        <button onclick="findRelatedWorks()">Find Related Works</button>
+        <div id="results"></div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
