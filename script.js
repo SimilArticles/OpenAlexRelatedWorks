@@ -1,41 +1,42 @@
-async function findRelatedWorks() {
+async function queryOpenAlex() {
     const doi = document.getElementById('doiInput').value;
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML = 'Loading...';
 
     try {
-        // Step 2: Query OpenAlex API with DOI
+        // Query OpenAlex API for the input DOI
         const response = await fetch(`https://api.openalex.org/works?filter=doi:${doi}`);
-        resultsDiv.innerHTML = `https://api.openalex.org/works?filter=doi:${doi}`
         const data = await response.json();
 
         if (data.results && data.results.length > 0) {
             const work = data.results[0];
-            
-            // Step 3: Parse the response to get related works
             const relatedWorks = work.related_works || [];
 
-            // Step 4 & 5: Query OpenAlex API for each related work and display results
+            // Query OpenAlex API for each related work
+            const relatedWorksPromises = relatedWorks.map(relatedId =>
+                fetch(`https://api.openalex.org/works/${relatedId}`)
+                    .then(response => response.json())
+            );
+
+            const relatedWorksData = await Promise.all(relatedWorksPromises);
+
+            // Display results
             resultsDiv.innerHTML = '<h2>Related Works:</h2>';
-            
-            for (const relatedWork of relatedWorks) {
-                const relatedResponse = await fetch(`https://api.openalex.org/works/${relatedWork}`);
-                const relatedData = await relatedResponse.json();
-                
-                const title = relatedData.title;
-                const relatedDoi = relatedData.doi;
-                
+            relatedWorksData.forEach(relatedWork => {
+                const title = relatedWork.title || 'No title available';
+                const doi = relatedWork.doi || '#';
                 resultsDiv.innerHTML += `
-                    <div class="related-work">
-                        <h3>${title}</h3>
-                        <a href="https://doi.org/${relatedDoi}" target="_blank">DOI: ${relatedDoi}</a>
-                    </div>
+                    <p>
+                        <strong>Title:</strong> ${title}<br>
+                        <strong>DOI:</strong> <a href="https://doi.org/${doi}" target="_blank">${doi}</a>
+                    </p>
                 `;
-            }
+            });
         } else {
             resultsDiv.innerHTML = 'No results found for the given DOI.';
         }
     } catch (error) {
-        resultsDiv.innerHTML = `An error occurred: ${error.message}`;
+        console.error('Error:', error);
+        resultsDiv.innerHTML = 'An error occurred while fetching data.';
     }
 }
